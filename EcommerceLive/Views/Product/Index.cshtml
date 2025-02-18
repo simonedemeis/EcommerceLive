@@ -6,6 +6,10 @@
 
 <h3>Products</h3>
 
+<div>
+    <a class="btn btn-primary" asp-controller="Product" asp-action="Add">Add product</a>
+</div>
+
 @if(Model.Products != null && Model.Products.Count > 0)
 {
     foreach(var product in Model.Products)

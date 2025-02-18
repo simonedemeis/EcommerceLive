@@ -1,0 +1,43 @@
+﻿@model AddProductModel
+
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<h3>Add Product</h3>
+
+<div>
+    <form method="post" asp-controller="Product" asp-action="Create">
+        <div>
+            <label for="firstName">Name</label>
+            <input id="firstName" asp-for="Name" required/>
+            <span class="text-danger" asp-validation-for="Name"></span>
+        </div>
+        
+        <div>
+            <label for="description">Description</label>
+            <textarea id="description" asp-for="Description"></textarea>
+            <span class="text-danger" asp-validation-for="Description"></span>
+        </div>
+        
+        <div>
+            <label for="category">Category</label>
+            <input id="category" asp-for="Category" />
+            <span class="text-danger" asp-validation-for="Category"></span>
+        </div>
+        
+        <div>
+            <label for="price">Price</label>
+            <input id="price" asp-for="Price" />
+            <span class="text-danger" asp-validation-for="Price"></span>
+        </div>
+        <div>
+            <button class="btn btn-success" type="submit">Save</button>
+            <button class="btn btn-warning" type="reset">Reset</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}
