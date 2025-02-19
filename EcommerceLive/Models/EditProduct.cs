@@ -2,8 +2,10 @@
 
 namespace EcommerceLive.Models
 {
-    public class AddProductModel
+    public class EditProduct
     {
+        public Guid? Id { get; set; }
+
         [Display(Name = "Name")]
         [Required(ErrorMessage = "Il nome è obbligatorio!")]
         public string? Name { get; set; }

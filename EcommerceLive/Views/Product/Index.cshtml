@@ -7,17 +7,38 @@
 <h3>Products</h3>
 
 <div>
+    @* asp-controller e asp-action identificano, rispettivamente, il controller e l'action method per la navigazione verso la view desiderata  *@
+    @* in fase di compilazione generano un href *@
     <a class="btn btn-primary" asp-controller="Product" asp-action="Add">Add product</a>
 </div>
 
-@if(Model.Products != null && Model.Products.Count > 0)
+@if (Model.Products != null && Model.Products.Count > 0)
 {
-    foreach(var product in Model.Products)
-    {
-        <div>@product.Id</div>
-        <div>@product.Name</div>
-        <div>@product.Category</div>
-        <div>@product.Description</div>
-        <div>@product.Price</div>
-    }
+    <table class="table table-striped table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Prezzo</th>
+                <th>Descrizione</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Model.Products)
+            {
+                <tr>
+                    <td>@product.Id</td>
+                    <td>@product.Name</td>
+                    <td>@product.Category</td>
+                    <td>@product.Price.ToString("C")</td>
+                    <td>@product.Description</td>
+                    <td>
+                        <a class="btn btn-warning" asp-controller="Product" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
