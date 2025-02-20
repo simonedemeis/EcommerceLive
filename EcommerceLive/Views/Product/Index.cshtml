@@ -10,6 +10,7 @@
     @* asp-controller e asp-action identificano, rispettivamente, il controller e l'action method per la navigazione verso la view desiderata  *@
     @* in fase di compilazione generano un href *@
     <a class="btn btn-primary" asp-controller="Product" asp-action="Add">Add product</a>
+    @await Html.PartialAsync("_HomeButtonPartial")
 </div>
 
 @if (Model.Products != null && Model.Products.Count > 0)
@@ -36,6 +37,7 @@
                     <td>@product.Description</td>
                     <td>
                         <a class="btn btn-warning" asp-controller="Product" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
+                        <a class="btn btn-danger" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id">Delete</a>
                     </td>
                 </tr>
             }

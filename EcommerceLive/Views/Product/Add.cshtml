@@ -6,6 +6,8 @@
 
 <h3>Add Product</h3>
 
+@await Html.PartialAsync("_HomeButtonPartial")
+
 <div>
     <form method="post" asp-controller="Product" asp-action="Create">
         <div>
@@ -13,19 +15,19 @@
             <input id="firstName" asp-for="Name" class="form-control"/>
             <span class="text-danger" asp-validation-for="Name"></span>
         </div>
-        
+
         <div>
             <label for="description" asp-for="Description" class="form-label">Description</label>
             <textarea id="description" asp-for="Description" class="form-control"></textarea>
             <span class="text-danger" asp-validation-for="Description"></span>
         </div>
-        
+
         <div>
             <label for="category" asp-for="Category" class="form-label">Category</label>
             <input id="category" asp-for="Category" class="form-control" />
             <span class="text-danger" asp-validation-for="Category"></span>
         </div>
-        
+
         <div>
             <label for="price" asp-for="Price" class="form-label">Price</label>
             <input id="price" asp-for="Price" class="form-control" />
@@ -37,6 +39,15 @@
         </div>
     </form>
 </div>
+
+@* @using (Html.BeginForm("Create", "Product", FormMethod.Post))
+{
+    <div>
+        @Html.LabelFor(x => x.Name, new {@class = "form-label"})
+        @Html.TextBoxFor(x => x.Name, new {@class = "form-control"})
+        @Html.ValidationMessageFor(x => x.Name)
+    </div>
+} *@
 
 @section Scripts{
     <partial name="_ValidationScriptsPartial" />

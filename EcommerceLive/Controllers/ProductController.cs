@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EcommerceLive.Controllers
 {
+    [AutoValidateAntiforgeryToken]
     public class ProductController : Controller
     {
         private static List<Product> products = new List<Product>()
@@ -113,6 +114,28 @@ namespace EcommerceLive.Controllers
             existingProduct.Description = editProduct.Description;
             existingProduct.Category = editProduct.Category;
             existingProduct.Price = editProduct.Price;
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet("product/delete/{id:guid}")]
+        public IActionResult Delete(Guid id)
+        {
+            var existingProduct = products.FirstOrDefault(p => p.Id == id);
+
+            //controllo se ho trovato il prodotto all'interno della lista/database
+            if (existingProduct == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            //Il metodo Remove delle liste restituisce un booleano che sta a indicare il successo dell'operazione.
+            var isRemoveSuccessful = products.Remove(existingProduct);
+
+            if (!isRemoveSuccessful)
+            {
+                return RedirectToAction("Index");
+            }
 
             return RedirectToAction("Index");
         }
