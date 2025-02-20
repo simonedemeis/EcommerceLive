@@ -6,6 +6,25 @@ namespace EcommerceLive.Controllers
     [AutoValidateAntiforgeryToken]
     public class ProductController : Controller
     {
+        private static List<Category> categories = new List<Category>()
+        {
+            new Category()
+            {
+                Id = Guid.Parse("a39a5aeb-ddbb-4827-b84d-f5f4ee1ee815"),
+                Name = "Electronics"
+            },
+            new Category()
+            {
+                Id = Guid.Parse("4361ffed-6842-401f-accb-75065981d5d9"),
+                Name = "Gardening"
+            },
+            new Category()
+            {
+                Id = Guid.Parse("e394ac27-43db-4f7c-b6fa-78e70a67a354"),
+                Name = "Books"
+            }
+        };
+
         private static List<Product> products = new List<Product>()
         {
             new Product()
@@ -13,7 +32,7 @@ namespace EcommerceLive.Controllers
                 Id = Guid.Parse("07a9299d-29db-4a84-b356-b803e9f00415"),
                 Name = "Pc",
                 Description = "A powerful pc",
-                Category = "Electronics",
+                Category = categories[0],
                 Price = 1000
             },
             new Product()
@@ -21,7 +40,7 @@ namespace EcommerceLive.Controllers
                 Id = Guid.Parse("64a2f7a7-fb39-4e15-ba32-c933da611f8b"),
                 Name = "Tv",
                 Description = "A beautiful tv",
-                Category = "Electronics",
+                Category = categories[0],
                 Price = 700
             },
             new Product()
@@ -29,7 +48,7 @@ namespace EcommerceLive.Controllers
                 Id = Guid.Parse("94ca6a86-9e0a-49e7-bad0-ca78ca376f50"),
                 Name = "Book",
                 Description = "A nice book",
-                Category = "Literature",
+                Category = categories[1],
                 Price = 20
             }
         };
@@ -47,8 +66,13 @@ namespace EcommerceLive.Controllers
         //Action method per la navigazione verso la vista identificata dal file Add.cshtml
         public IActionResult Add()
         {
-            return View();
+            var model = new AddProductModel()
+            {
+                Categories = categories
+            };
+            return View(model);
         }
+
 
         [HttpPost]
         public IActionResult Create(AddProductModel addProductModel)
@@ -63,7 +87,7 @@ namespace EcommerceLive.Controllers
                 Id = Guid.NewGuid(),
                 Name = addProductModel.Name,
                 Description = addProductModel.Description,
-                Category = addProductModel.Category,
+                Category = categories.FirstOrDefault(c => c.Id == addProductModel.CategoryId),
                 Price = addProductModel.Price,
             };
 
@@ -90,9 +114,12 @@ namespace EcommerceLive.Controllers
                 Id = existingProduct.Id,
                 Name = existingProduct.Name,
                 Description = existingProduct.Description,
-                Category = existingProduct.Category,
+                CategoryId = existingProduct.Category?.Id,
                 Price = existingProduct.Price
             };
+
+            //Passo la lista di categorie alla vista tramite ViewBag. Ricordarsi di specificare il tipo di dato.
+            ViewBag.Categories = categories;
 
             return View(editProduct);
         }
@@ -112,7 +139,7 @@ namespace EcommerceLive.Controllers
             //assegno i valori conservati nel modello (presi dai campi di input) alle proprietà dell'oggetto trovato. Lo faccio perchè non quale proprietà l'utente ha modificato, quindi le devo assegnare tutte, tranne l'id che rimane lo stesso.
             existingProduct.Name = editProduct.Name;
             existingProduct.Description = editProduct.Description;
-            existingProduct.Category = editProduct.Category;
+            existingProduct.Category = categories.FirstOrDefault(c => c.Id == editProduct.CategoryId);
             existingProduct.Price = editProduct.Price;
 
             return RedirectToAction("Index");

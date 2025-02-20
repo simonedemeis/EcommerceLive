@@ -6,8 +6,6 @@
 
 <h3>Add Product</h3>
 
-@await Html.PartialAsync("_HomeButtonPartial")
-
 <div>
     <form method="post" asp-controller="Product" asp-action="Create">
         <div>
@@ -23,9 +21,11 @@
         </div>
 
         <div>
-            <label for="category" asp-for="Category" class="form-label">Category</label>
-            <input id="category" asp-for="Category" class="form-control" />
-            <span class="text-danger" asp-validation-for="Category"></span>
+            <label for="category" asp-for="CategoryId" class="form-label"></label>
+            <select class="form-control" asp-for="CategoryId" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                <option value="">--- select a category ---</option>
+            </select>
+            <span class="text-danger" asp-validation-for="CategoryId"></span>
         </div>
 
         <div>
@@ -39,15 +39,6 @@
         </div>
     </form>
 </div>
-
-@* @using (Html.BeginForm("Create", "Product", FormMethod.Post))
-{
-    <div>
-        @Html.LabelFor(x => x.Name, new {@class = "form-label"})
-        @Html.TextBoxFor(x => x.Name, new {@class = "form-control"})
-        @Html.ValidationMessageFor(x => x.Name)
-    </div>
-} *@
 
 @section Scripts{
     <partial name="_ValidationScriptsPartial" />

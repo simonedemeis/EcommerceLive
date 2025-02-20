@@ -16,7 +16,7 @@ namespace EcommerceLive.Models
 
         [Display(Name = "Category")]
         [Required(ErrorMessage = "La categoria è obbligatoria!")]
-        public string? Category { get; set; }
+        public Guid? CategoryId { get; set; }
 
         [Display(Name = "Price")]
         [Required(ErrorMessage = "Il prezzo è obbligatorio!")]

@@ -16,12 +16,14 @@ namespace EcommerceLive.Models
 
         [Display(Name = "Category")]
         [Required(ErrorMessage = "La categoria è obbligatoria!")]
-        public string? Category { get; set; }
+        public Guid? CategoryId { get; set; }
 
         [Display(Name = "Price")]
         [Required(ErrorMessage = "Il prezzo è obbligatorio!")]
-        [Range(1.00, 10.000, ErrorMessage = "Il prezzo deve essere in un range compreso tra 1 e 10000 euro")]
+        [Range(1, 10000, ErrorMessage = "Il prezzo deve essere in un range compreso tra 1 e 10000 euro")]
         public decimal Price { get; set; }
+
+        public List<Category>? Categories { get; set; }
 
     }
 }
