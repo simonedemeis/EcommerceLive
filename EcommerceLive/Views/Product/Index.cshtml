@@ -6,6 +6,11 @@
 
 <h3>Products</h3>
 
+@if(TempData["Error"] != null)
+{
+    <span class="text-dange">@TempData["Error"]</span>
+}
+
 <div>
     @* asp-controller e asp-action identificano, rispettivamente, il controller e l'action method per la navigazione verso la view desiderata  *@
     @* in fase di compilazione generano un href *@

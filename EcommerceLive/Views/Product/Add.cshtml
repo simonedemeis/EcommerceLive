@@ -6,6 +6,11 @@
 
 <h3>Add Product</h3>
 
+@if(TempData["Error"] != null)
+{
+    <span class="text-danger">@TempData["Error"]</span>
+}
+
 <div>
     <form method="post" asp-controller="Product" asp-action="Create">
         <div>

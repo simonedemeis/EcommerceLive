@@ -26,9 +26,12 @@
         <div>
             <label for="category" asp-for="CategoryId" class="form-label"></label>
             <select asp-for="CategoryId">
-                @foreach (var category in categories!)
+                @if(categories != null)
                 {
-                    <option value="@category.Id">@category.Name</option>
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
                 }
             </select>
             <span class="text-danger" asp-validation-for="CategoryId"></span>

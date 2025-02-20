@@ -48,7 +48,7 @@ namespace EcommerceLive.Controllers
                 Id = Guid.Parse("94ca6a86-9e0a-49e7-bad0-ca78ca376f50"),
                 Name = "Book",
                 Description = "A nice book",
-                Category = categories[1],
+                Category = categories[2],
                 Price = 20
             }
         };
@@ -79,6 +79,7 @@ namespace EcommerceLive.Controllers
         {
             if (!ModelState.IsValid)
             {
+                TempData["Error"] = "Try again!";
                 return RedirectToAction("Add");
             }
 
@@ -105,6 +106,7 @@ namespace EcommerceLive.Controllers
 
             if (existingProduct == null)
             {
+                TempData["Error"] = "Product not found";
                 return RedirectToAction("Index");
             }
 
@@ -133,6 +135,7 @@ namespace EcommerceLive.Controllers
             //controllo se ho trovato il prodotto all'interno della lista/database
             if (existingProduct == null)
             {
+                TempData["Error"] = "Product not found";
                 return RedirectToAction("Index");
             }
 
