@@ -1,81 +1,117 @@
 ﻿using EcommerceLive.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using System.IO.Pipelines;
+using System.Threading.Tasks;
 
 namespace EcommerceLive.Controllers
 {
     [AutoValidateAntiforgeryToken]
     public class ProductController : Controller
     {
-        private static List<Category> categories = new List<Category>()
-        {
-            new Category()
-            {
-                Id = Guid.Parse("a39a5aeb-ddbb-4827-b84d-f5f4ee1ee815"),
-                Name = "Electronics"
-            },
-            new Category()
-            {
-                Id = Guid.Parse("4361ffed-6842-401f-accb-75065981d5d9"),
-                Name = "Gardening"
-            },
-            new Category()
-            {
-                Id = Guid.Parse("e394ac27-43db-4f7c-b6fa-78e70a67a354"),
-                Name = "Books"
-            }
-        };
+        //campo privato readonly che può essere valorizzato solo all'interno del costruttore.
+        private readonly string _connectionString;
 
-        private static List<Product> products = new List<Product>()
+        public ProductController()
         {
-            new Product()
-            {
-                Id = Guid.Parse("07a9299d-29db-4a84-b356-b803e9f00415"),
-                Name = "Pc",
-                Description = "A powerful pc",
-                Category = categories[0],
-                Price = 1000
-            },
-            new Product()
-            {
-                Id = Guid.Parse("64a2f7a7-fb39-4e15-ba32-c933da611f8b"),
-                Name = "Tv",
-                Description = "A beautiful tv",
-                Category = categories[0],
-                Price = 700
-            },
-            new Product()
-            {
-                Id = Guid.Parse("94ca6a86-9e0a-49e7-bad0-ca78ca376f50"),
-                Name = "Book",
-                Description = "A nice book",
-                Category = categories[2],
-                Price = 20
-            }
-        };
+            //creo un'istanza della configurazione, per leggere la stringa di connessione al database
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false, true) //il secondo parametro indica l'obligatoreità del file, il terzo parametro indica se il file deve essere ricaricato e letto nuovamente quando viene modificato durante l'esecuzione del programa
+                .Build();
 
-        public IActionResult Index()
+            //Lettura della configurazione dal file appsettings.json
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
+        }
+
+        public async Task<IActionResult> Index()
         {
             var productsList = new ProductsViewModel()
             {
-                Products = products
+                Products = new List<Product>()
             };
+
+            //mi connetto al server di database
+            await using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                //se non apro la connessione, non mi connetto al db e non posso eseguire query
+                await connection.OpenAsync();
+                string query = "SELECT Prodotti.prodotto_id, Prodotti.nome, Categorie.categoria_nome, Prodotti.prezzo, Prodotti.descrizione FROM Prodotti INNER JOIN Categorie ON Prodotti.categoria_id = Categorie.categoria_id;";
+
+                await using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            productsList.Products.Add(
+                                new Product()
+                                {
+                                    Id = reader.GetGuid(0),
+                                    Name = reader.GetString(1),
+                                    Category = reader.GetString(2),
+                                    Price = reader.GetDecimal(3),
+                                    Description = reader.GetString(4)
+                                }
+                            );
+                        }
+                    }
+                }
+            }
 
             return View(productsList);
         }
 
         //Action method per la navigazione verso la vista identificata dal file Add.cshtml
-        public IActionResult Add()
+        public async Task<IActionResult> Add()
         {
             var model = new AddProductModel()
             {
-                Categories = categories
+                Categories = await GetCategories()
             };
+
             return View(model);
+        }
+
+        //metodo per il recuper delle categorie dal database
+        private async Task<List<Category>> GetCategories()
+        {
+            List<Category> listaCategorie = new List<Category>();
+            //mi connetto al serve del database
+            await using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                //apro la connessione
+                await connection.OpenAsync();
+                var query = "SELECT * FROM Categorie";
+
+                //istanzio ed esego il comando sql
+                await using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        //leggiamo tutte le righe dalla tabella Categorie finche non sono esaurite
+
+                        while(await reader.ReadAsync())
+                        {
+                            listaCategorie.Add(
+                                new Category()
+                                {
+                                    Id = reader.GetGuid(0),
+                                    Name = reader.GetString(1)
+                                }    
+                            );
+                        }
+                    }
+                }
+            }
+
+            return listaCategorie;
+
         }
 
 
         [HttpPost]
-        public IActionResult Create(AddProductModel addProductModel)
+        public async Task<IActionResult> Create(AddProductModel addProductModel)
         {
             if (!ModelState.IsValid)
             {
@@ -83,88 +119,110 @@ namespace EcommerceLive.Controllers
                 return RedirectToAction("Add");
             }
 
-            var newProduct = new Product()
+            //mi connetto al server del database
+            await using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                Id = Guid.NewGuid(),
-                Name = addProductModel.Name,
-                Description = addProductModel.Description,
-                Category = categories.FirstOrDefault(c => c.Id == addProductModel.CategoryId),
-                Price = addProductModel.Price,
-            };
+                //apro la connessione al db
+                await connection.OpenAsync();
+                //Il simbolo @ identifica un placeholder che verrà sostituito dal valore reale
+                var query = "INSERT INTO Prodotti VALUES (@prodotto_id, @nome, @descrizione, @prezzo, @categoria_id)";
 
-            products.Add(newProduct);
+                await using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@prodotto_id", Guid.NewGuid());
+                    command.Parameters.AddWithValue("@nome", addProductModel.Name);
+                    command.Parameters.AddWithValue("@descrizione", addProductModel.Description);
+                    command.Parameters.AddWithValue("@prezzo", addProductModel.Price);
+                    command.Parameters.AddWithValue("@categoria_id", addProductModel.CategoryId);
+
+                    int righeInteressate = await command.ExecuteNonQueryAsync();
+                }
+
+            }
 
             return RedirectToAction("Index");
         }
 
         [HttpGet("product/edit/{id:guid}")]
-        public IActionResult Edit(Guid id)
+        public async Task<IActionResult> Edit(Guid id)
         {
-            //cerco l'oggetto corrispondente all'id nella lista statica/database
+            //Usare come fonte di verità dei dati sempre gli oggetti presenti e recuperati dal database, non i parametri dei metodi.
+            var editProduct = new EditProduct();
 
-            var existingProduct = products.FirstOrDefault(p => p.Id == id);
-
-            if (existingProduct == null)
+            //mi collego al serve db
+            await using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                TempData["Error"] = "Product not found";
-                return RedirectToAction("Index");
+                //apro la connessione
+                await connection.OpenAsync();
+                var query = "SELECT * FROM Prodotti WHERE prodotto_id = @Id";
+
+                await using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+
+                    await using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while(await reader.ReadAsync())
+                        {
+                            editProduct.Id = reader.GetGuid(0);
+                            editProduct.Name = reader.GetString(1);
+                            editProduct.CategoryId = reader.GetGuid(4);
+                            editProduct.Description = reader.GetString(2);
+                            editProduct.Price = reader.GetDecimal(3);
+                        }
+                    }
+                }
             }
 
-            //Usare come fonte di verità dei dati sempre gli oggetti presenti e recuperati dal database, non i parametri dei metodi.
-            var editProduct = new EditProduct()
-            {
-                Id = existingProduct.Id,
-                Name = existingProduct.Name,
-                Description = existingProduct.Description,
-                CategoryId = existingProduct.Category?.Id,
-                Price = existingProduct.Price
-            };
-
             //Passo la lista di categorie alla vista tramite ViewBag. Ricordarsi di specificare il tipo di dato.
-            ViewBag.Categories = categories;
+
+            //uso il metodo GetCategories per non ripetere il codice della selezione delle categorie
+            ViewBag.Categories = await GetCategories();
 
             return View(editProduct);
         }
 
         [HttpPost("product/edit/save/{id:guid}")]
-        public IActionResult SaveEdit(Guid id, EditProduct editProduct)
+        public async Task<IActionResult> SaveEdit(Guid id, EditProduct editProduct)
         {
-            //cerco l'oggetto corrispondente all'id nella lista statica/database
-            var existingProduct = products.FirstOrDefault(p => p.Id == id);
-
-            //controllo se ho trovato il prodotto all'interno della lista/database
-            if (existingProduct == null)
+            //mi collego al server del db
+            await using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                TempData["Error"] = "Product not found";
-                return RedirectToAction("Index");
-            }
+                //apro la connessione al db
+                await connection.OpenAsync();
+                var query = "UPDATE Prodotti SET nome=@nome, descrizione=@descrizione, prezzo=@prezzo, categoria_id=@categoria_id WHERE prodotto_id=@Id";
 
-            //assegno i valori conservati nel modello (presi dai campi di input) alle proprietà dell'oggetto trovato. Lo faccio perchè non quale proprietà l'utente ha modificato, quindi le devo assegnare tutte, tranne l'id che rimane lo stesso.
-            existingProduct.Name = editProduct.Name;
-            existingProduct.Description = editProduct.Description;
-            existingProduct.Category = categories.FirstOrDefault(c => c.Id == editProduct.CategoryId);
-            existingProduct.Price = editProduct.Price;
+                await using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+                    command.Parameters.AddWithValue("@nome", editProduct.Name);
+                    command.Parameters.AddWithValue("@descrizione", editProduct.Description);
+                    command.Parameters.AddWithValue("@prezzo", editProduct.Price);
+                    command.Parameters.AddWithValue("@categoria_id", editProduct.CategoryId);
+
+                    int righeInteressate = await command.ExecuteNonQueryAsync();
+                }
+            }
 
             return RedirectToAction("Index");
         }
 
         [HttpGet("product/delete/{id:guid}")]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var existingProduct = products.FirstOrDefault(p => p.Id == id);
-
-            //controllo se ho trovato il prodotto all'interno della lista/database
-            if (existingProduct == null)
+            //mi connetto al server del db
+            await using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                return RedirectToAction("Index");
-            }
+                //apro la connessione
+                await connection.OpenAsync();
+                var query = "DELETE FROM Prodotti WHERE prodotto_id = @Id";
 
-            //Il metodo Remove delle liste restituisce un booleano che sta a indicare il successo dell'operazione.
-            var isRemoveSuccessful = products.Remove(existingProduct);
+                await using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
 
-            if (!isRemoveSuccessful)
-            {
-                return RedirectToAction("Index");
+                    int righeInteressate = await command.ExecuteNonQueryAsync();
+                }
             }
 
             return RedirectToAction("Index");
