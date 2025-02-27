@@ -1,8 +1,6 @@
 ﻿using EcommerceLive.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using System.IO.Pipelines;
-using System.Threading.Tasks;
 
 namespace EcommerceLive.Controllers
 {
@@ -162,10 +160,10 @@ namespace EcommerceLive.Controllers
 
                     await using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
-                        while(await reader.ReadAsync())
+                        while (await reader.ReadAsync())
                         {
                             editProduct.Id = Guid.Parse(reader["prodotto_id"].ToString());
-                            editProduct.Name = reader.GetString(1);
+                            editProduct.Name = reader["npme"].ToString();
                             editProduct.CategoryId = reader.GetGuid(4);
                             editProduct.Description = reader.GetString(2);
                             editProduct.Price = reader.GetDecimal(3);
