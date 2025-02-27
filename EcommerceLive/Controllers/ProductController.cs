@@ -164,7 +164,7 @@ namespace EcommerceLive.Controllers
                     {
                         while(await reader.ReadAsync())
                         {
-                            editProduct.Id = reader.GetGuid(0);
+                            editProduct.Id = Guid.Parse(reader["prodotto_id"].ToString());
                             editProduct.Name = reader.GetString(1);
                             editProduct.CategoryId = reader.GetGuid(4);
                             editProduct.Description = reader.GetString(2);
@@ -190,7 +190,7 @@ namespace EcommerceLive.Controllers
             {
                 //apro la connessione al db
                 await connection.OpenAsync();
-                var query = "UPDATE Prodotti SET nome=@nome, descrizione=@descrizione, prezzo=@prezzo, categoria_id=@categoria_id WHERE prodotto_id=@Id";
+                var query = $"UPDATE Prodotti SET nome=@name, descrizione=@descrizione, prezzo=@prezzo, categoria_id=@categoria_id WHERE prodotto_id=@Id";
 
                 await using (SqlCommand command = new SqlCommand(query, connection))
                 {
